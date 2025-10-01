@@ -1,5 +1,4 @@
 import interactions
-import json
 import cloudscraper
 from interactions import listen
 from interactions.api.events import Component
@@ -8,6 +7,7 @@ import random
 import asyncio
 import time
 import datetime
+from database import getbalance, register, add, remove, isregistered
 requests = cloudscraper.create_scraper()
 
 bot = interactions.Client(
@@ -31,39 +31,10 @@ tax = 7
 withdraw_tax = 0
 
 
-def dump(filename, jsondata):
-    with open(filename, "w") as f:
-        json.dump(jsondata, f)
-    return 1
-def getbalance(id):
-    x = json.load(open("users.json", "r"))
-    return x[str(id)]['balance']
-def register(user_id):
-    stats_to_add = {
-        f"{user_id}": {"balance": 0}
-    }
-    users = json.load(open("users.json"))
-    users.update(stats_to_add)
-    dump("users.json", users)
-    return "Done"
 def genaddress():
     ad = requests.post(f"https://apirone.com/api/v2/wallets/{wallet_id}/addresses").json()
     address = ad["address"]
     return address
-def add(id: str, amount: float):
-    x = json.load(open("users.json", "r"))
-    oldbal = x[id]['balance']
-    newbal = oldbal+amount
-    x[id]['balance'] = round(newbal, 2)
-    x.update(x)
-    dump("users.json", x)
-def remove(id: str, amount: float):
-    x = json.load(open("users.json", "r"))
-    oldbal = x[id]['balance']
-    newbal = oldbal-amount
-    x[id]['balance'] = round(newbal, 2)
-    x.update(x)
-    dump("users.json", x)
 def ltcwithdraw(amount: float, address: str):
     addresses = requests.get(f"https://apirone.com/api/v2/wallets/{wallet_id}/addresses?limit=99&offset=0&q=empty:true").json()
     addresslist = []
@@ -88,13 +59,6 @@ def ltcwithdraw(amount: float, address: str):
         "subtract-fee-from-amount": True
     }).json()
 
-def isregistered(id):
-    try:
-        x = json.load(open("users.json", "r"))
-        x[str(id)]['balance']
-        return True
-    except:
-        return False
 def convert_to_unix_time(date: datetime.datetime, days: int, hours: int, minutes: int, seconds: int) -> str:
     # Get the end date
     end_date = date + datetime.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
